@@ -75,12 +75,12 @@ class MemoryMonitor:
                     logger.info("Calculated high threshold for {}:{}: {}".format(name, mem_item, high_threshold))
 
                     if previous_value > high_threshold:
-                        self._handle_memory_threshold_exceeded(
-                            name, mem_item, previous_value, high_threshold_raw,
-                            previous_values, current_values, is_current=False
+                        self._handle_memory_high_baseline_warning(
+                            name, mem_item, high_threshold_raw,
+                            previous_values, current_values
                         )
 
-                    if current_value > high_threshold:
+                    if previous_value <= high_threshold < current_value:
                         self._handle_memory_threshold_exceeded(
                             name, mem_item, current_value, high_threshold_raw,
                             previous_values, current_values, is_current=True
@@ -368,6 +368,26 @@ class MemoryMonitor:
             "[WARNING]: {}:{} memory usage increased by {:.1f} MB, exceeds warning threshold {} "
             "(previous: {:.1f} MB, current: {:.1f} MB). Not failing - within fail threshold."
             .format(name, mem_item, value, threshold_str, prev_val, curr_val)
+        )
+
+    def _handle_memory_high_baseline_warning(self, name, mem_item, threshold,
+                                             previous_values, current_values):
+        """Warn if memory was already above the high threshold before the test."""
+        prev_val = previous_values.get(name, {}).get(mem_item, 0)
+        curr_val = current_values.get(name, {}).get(mem_item, 0)
+        threshold_str = self._format_threshold_for_display(threshold)
+        threshold_type = threshold.get('type') if isinstance(threshold, dict) else None
+
+        def fmt(value):
+            if threshold_type in ('percentage', 'percentage_points'):
+                return "{}%".format(value)
+            return "{} MB".format(value)
+
+        logger.warning(
+            "[WARNING]: {}:{} memory usage was already above high threshold {} before the test "
+            "(previous: {}, current: {}). Not failing unless the test crosses the threshold "
+            "or exceeds the increase threshold."
+            .format(name, mem_item, threshold_str, fmt(prev_val), fmt(curr_val))
         )
 
     def get_memory_errors(self):

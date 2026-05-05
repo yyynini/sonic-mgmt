@@ -84,7 +84,7 @@ Each memory item in the configuration includes:
 | `memory_check` | Function name used to parse command output |
 
 Each `memory_params` entry can define:
-- `memory_high_threshold`: Maximum acceptable value (fails if exceeded)
+- `memory_high_threshold`: Maximum acceptable value (fails if crossed during the test)
 - `memory_increase_threshold`: Maximum acceptable increase (fails if exceeded)
 
 ### Threshold Types
@@ -202,7 +202,7 @@ You can also specify `"max"` comparison to use the largest threshold:
    - Compares with baseline and thresholds
 
 3. **Validation**:
-   - Checks if current values exceed high thresholds
+   - Checks if current values cross high thresholds during the test
    - Checks if increases exceed increase thresholds
    - Fails the test if any threshold is exceeded
 
